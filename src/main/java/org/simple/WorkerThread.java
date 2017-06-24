@@ -61,6 +61,7 @@ public class WorkerThread extends Thread {
             int count = inputStream.read(buffer);
             if (count == -1) {
                 log.info("Connection closed");
+                socket.close();
                 break;
             }
             log.info("Succeed to read {} bytes: \n{}", count, new String(buffer, 0, count));
