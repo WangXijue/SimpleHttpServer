@@ -32,8 +32,8 @@ public class WorkerThread extends Thread {
 
     private static String response = String.format("HTTP/1.1 200 OK\r\n"+
             "SimpleServer: SimpleServer/1.0\n" +
-            "Connection: Keep-Alive\n" +
-            //"Connection: close\n" +
+            //"Connection: Keep-Alive\n" +
+            "Connection: close\n" +
             "Content-Length: %d\n" +
             "Content-Type: text/html\r\n\r\n%s", responseBody.getBytes().length, responseBody);
 
@@ -54,20 +54,30 @@ public class WorkerThread extends Thread {
         OutputStream outputStream = socket.getOutputStream();
 
         log.debug("Begin to read socket...");
+        final int BUFFER_SIZE = 1024;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int offset = 0;
 
         while (true) {
-            byte[] buffer = new byte[1024];
-
-            int count = inputStream.read(buffer);
+            int count = inputStream.read(buffer, offset, BUFFER_SIZE-offset);
             if (count == -1) {
                 log.info("Connection closed");
                 socket.close();
+                return;
+            }
+            offset += count;
+
+            // FIXME
+            if (inputStream.available() == 0) {
                 break;
             }
-            log.info("Succeed to read {} bytes: \n{}", count, new String(buffer, 0, count));
-            outputStream.write(response.getBytes());
-            outputStream.flush();
         }
+
+        log.info("Succeed to read {} bytes: \n{}", offset, new String(buffer, 0, offset));
+
+        outputStream.write(response.getBytes());
+        outputStream.flush();
+        socket.close();
     }
 
     @Override
