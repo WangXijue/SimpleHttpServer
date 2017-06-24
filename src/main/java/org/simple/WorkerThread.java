@@ -54,10 +54,11 @@ public class WorkerThread extends Thread {
         OutputStream outputStream = socket.getOutputStream();
 
         log.debug("Begin to read socket...");
-        final int BUFFER_SIZE = 1024;
+        final int BUFFER_SIZE = 4096;
         byte[] buffer = new byte[BUFFER_SIZE];
         int offset = 0;
 
+        // NOTE: 目前仅支持短连接，在接收完一个HTTP请求并响应后即关闭连接
         while (true) {
             int count = inputStream.read(buffer, offset, BUFFER_SIZE-offset);
             if (count == -1) {
@@ -67,8 +68,7 @@ public class WorkerThread extends Thread {
             }
             offset += count;
 
-            // FIXME
-            if (inputStream.available() == 0) {
+            if (inputStream.available() == 0 || offset == BUFFER_SIZE) {
                 break;
             }
         }
